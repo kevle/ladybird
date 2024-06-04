@@ -1,0 +1,16 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "name": "ladybird",
+    "version": "0.0.0",
+    "dependencies": [
+        {
+            "name": "qtbase",
+            "default-features": true
+        },
+        {
+            "name": "qtmultimedia",
+            "default-features": false,
+            "features": ["widgets"]
+        }
+    ]
+}

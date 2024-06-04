@@ -27,6 +27,23 @@ if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
     add_compile_options(-Werror)
 endif()
 
+if (WIN32)
+    # -Wall with clang-cl is equivalent to -Weverything, which is extremely noisy
+    add_compile_options(-Wno-unknown-attributes) # [[no_unique_address]] is broken in MSVC ABI until next ABI break
+    add_compile_options(-Wno-reinterpret-base-class)
+    add_compile_options(-Wno-microsoft-unqualified-friend) # MSVC doesn't support unqualified friends
+    add_compile_definitions(-D_CRT_SECURE_NO_WARNINGS) # _s replacements not desired (or implemented on any other platform other than VxWorks)
+    add_compile_definitions(-D_CRT_NONSTDC_NO_WARNINGS) # POSIX names are just fine, thanks
+    add_compile_definitions(-D_USE_MATH_DEFINES)
+    add_compile_definitions(-D_WIN32_WINNT=0x0602)
+    add_compile_definitions(-DNOMINMAX)
+    add_compile_definitions(-DWIN32_LEAN_AND_MEAN)
+    add_compile_definitions(-DNAME_MAX=255)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+    add_compile_options(-Wno-deprecated-declarations)
+    add_compile_options(-Wno-unused-function)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
     add_compile_options(-fconstexpr-steps=16777216)
