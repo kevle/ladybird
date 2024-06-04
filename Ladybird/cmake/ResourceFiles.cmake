@@ -104,19 +104,33 @@ function(copy_resource_set subdir)
         set_source_files_properties(${inputs} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources/${subdir}")
     else()
         set(outputs "")
+        set(flat_inputs "")
         foreach (input IN LISTS inputs)
             get_filename_component(input_name "${input}" NAME)
             list(APPEND outputs "${COPY_DESTINATION}/${subdir}/${input_name}")
+            list(APPEND flat_inputs "${input}")
         endforeach()
 
-        add_custom_command(
-            OUTPUT ${outputs}
-            DEPENDS ${inputs}
-            COMMAND "${CMAKE_COMMAND}" -E make_directory "${COPY_DESTINATION}/${subdir}"
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${inputs}" "${COPY_DESTINATION}/${subdir}"
-            COMMAND_EXPAND_LISTS
-            VERBATIM
-        )
+        set(chunk_size 20)
+
+        list(LENGTH flat_inputs elements)
+        math(EXPR chunks "(${elements} - 1) / ${chunk_size}")
+
+        foreach(chunk_id RANGE ${chunks})
+            math(EXPR offset "${chunk_id} * ${chunk_size}")
+            list(LENGTH flat_inputs elements_new)            
+            list(SUBLIST flat_inputs ${offset} ${chunk_size} input)
+            list(SUBLIST outputs ${offset} ${chunk_size} output)
+            add_custom_command(
+                OUTPUT ${output}
+                DEPENDS ${input}
+                COMMAND "${CMAKE_COMMAND}" -E make_directory "${COPY_DESTINATION}/${subdir}"
+                COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${input}" "${COPY_DESTINATION}/${subdir}"
+                COMMAND_EXPAND_LISTS
+                VERBATIM
+            )
+        endforeach()
+        
         string(REPLACE "/" "_" subdir_underscores "${subdir}")
         set(target_name "copy_${subdir_underscores}_resources_to_build")
         while (TARGET ${target_name})
